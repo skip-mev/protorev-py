@@ -22,10 +22,12 @@ from cosmpy.protos.osmosis.protorev.v1beta1.tx_pb2 import MsgSetDeveloperAccount
 
 # @DEV TODO: 
 # EDIT MNEMONIC TO THE ONE YOU CREATED TO BE THE ADMIN FROM THE PREVIOUS TEST SCRIPT
+# THIS ONE IS FROM LOCALOSMOSIS SETUP
 ADMIN_MNEMONIC = "notice oak worry limit wrap speak medal online prefer cluster roof addict wrist behave treat actual wasp year salad speed social layer crew genius"
 
 # @DEV TODO: 
 # EDIT MNEMONIC TO BE ONE YOU HAVE ACCESS TO WITH ENOUGH FUNDS TO PAY FOR GAS
+# THIS ONE IS FROM LOCALOSMOSIS SETUP
 AUTHZ_EXECUTOR_MNEMONIC = "bottom loan skill merry east cradle onion journey palm apology verb edit desert impose absurd oil bubble sweet glove shallow size build burst effort"
 
 # @DEV TODO: 
