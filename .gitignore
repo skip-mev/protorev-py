@@ -1,0 +1,6 @@
+venv/
+*.pyc
+osmosis-mev-data/
+.ipynb_checkpoints
+scrap/
+mainnet-prep/
