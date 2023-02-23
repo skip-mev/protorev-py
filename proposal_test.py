@@ -55,12 +55,12 @@ def main():
     delegate(client)
     
     # Submits a proposal to set the admin account to MNEMONIC's and votes on it to pass
-    submit_admin_account_proposal(client)
-    vote_on_admin_account_proposal(client)
+    admin_acc_prop_id = submit_admin_account_proposal(client)
+    vote_on_admin_account_proposal(client, admin_acc_prop_id)
     
     # Submits a proposal to enable the module and votes on it to pass
-    submit_enable_proposal(client)
-    vote_on_enable_proposal(client)
+    enable_prop_id = submit_enable_proposal(client)
+    vote_on_enable_proposal(client, enable_prop_id)
     
 def create_wallet(client, mnemonic: str) -> tuple[LocalWallet, str, Account]:
     seed_bytes = Bip39SeedGenerator(mnemonic).Generate()
@@ -84,10 +84,10 @@ def create_and_send_tx(msgs: list, wallet: LocalWallet, account: Account, client
     submitted_tx = client.broadcast_tx(tx)
     submitted_tx.wait_to_complete()
     print(f"{print_helper} Submitted Tx Response: {submitted_tx.response}")
+    return submitted_tx.response
     
-def get_proposal_id() -> int:
-    proposals = httpx.get(f"{REST_NODE}/gov/proposals").json()
-    return int(proposals['result'][-1]['id'])
+def get_proposal_id(response) -> int:
+    return int(response.events['submit_proposal']['proposal_id'])
 
 def delegate(client):
     new_admin_wallet, new_admin_address, new_admin_account = create_wallet(client, MNEMONIC)
@@ -97,7 +97,7 @@ def delegate(client):
         amount=Coin(denom=DENOM, amount=DELEGATION_AMOUNT))
     create_and_send_tx([msg_delegate], new_admin_wallet, new_admin_account, client, "Delegate")
     
-def submit_admin_account_proposal(client):
+def submit_admin_account_proposal(client) -> int:
     new_admin_wallet, new_admin_address, new_admin_account = create_wallet(client, MNEMONIC)
     set_admin_msg = SetProtoRevAdminAccountProposal(
         title="Set Admin Account",
@@ -114,11 +114,12 @@ def submit_admin_account_proposal(client):
         proposer=new_admin_address,
         is_expedited=False
     )
-    create_and_send_tx([msg_proposal], new_admin_wallet, new_admin_account, client, "Admin Account Proposal")
+    tx_resp = create_and_send_tx([msg_proposal], new_admin_wallet, new_admin_account, client, "Admin Account Proposal")
+    proposal_id = get_proposal_id(tx_resp)
+    return proposal_id
     
-def vote_on_admin_account_proposal(client):
+def vote_on_admin_account_proposal(client, proposal_id):
     new_admin_wallet, new_admin_address, new_admin_account = create_wallet(client, MNEMONIC)
-    proposal_id = get_proposal_id()
     msg_vote = MsgVote(
         proposal_id=proposal_id,
         voter=new_admin_address,
@@ -126,7 +127,7 @@ def vote_on_admin_account_proposal(client):
     )
     create_and_send_tx([msg_vote], new_admin_wallet, new_admin_account, client, "Vote on Admin Account Proposal")
     
-def submit_enable_proposal(client):
+def submit_enable_proposal(client) -> int:
     wallet, address, account = create_wallet(client, MNEMONIC)
     enable_protorev_msg = SetProtoRevEnabledProposal(
         title="Set Protorev Enabled",
@@ -143,11 +144,12 @@ def submit_enable_proposal(client):
         proposer=address,
         is_expedited=False
     )
-    create_and_send_tx([msg_proposal], wallet, account, client, "Enable Protorev Proposal")
+    tx_resp = create_and_send_tx([msg_proposal], wallet, account, client, "Enable Protorev Proposal")
+    proposal_id = get_proposal_id(tx_resp)
+    return proposal_id
 
-def vote_on_enable_proposal(client):
+def vote_on_enable_proposal(client, proposal_id):
     wallet, address, account = create_wallet(client, MNEMONIC)
-    proposal_id = get_proposal_id()
     msg_vote = MsgVote(proposal_id=proposal_id,
                        voter=address,
                        option=VoteOption.VOTE_OPTION_YES)
