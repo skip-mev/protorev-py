@@ -39,22 +39,48 @@ def main():
     )
     client = LedgerClient(cfg)
     
-    many_balancer_swaps_in_block(client, 497, "ibc/46B44899322F3CD854D2D46DEEF881958467CDD4B3B10086DA49296BBED94BED")
+    # Used to test the tx pool points / limits work properly
+    # Most likely not useful for osmosis team testing as tracking pool points consumption
+    # is via adding print statements throughout on my localosmosis setup    
+    many_balancer_swaps_in_one_tx(client)
+    
+    # Maxs out the block limit of number of backruns by swapping 200 times in one block
+    many_balancer_swaps_in_one_block(client, 497, "ibc/46B44899322F3CD854D2D46DEEF881958467CDD4B3B10086DA49296BBED94BED")
     
     #many_stableswap_swaps_in_block(client)
     
-
-def many_balancer_swaps_in_block(client, pool_id: int, token_out_denom: str):
+def many_balancer_swaps_in_one_tx(client):
     admin_wallet, admin_address, admin_account = create_wallet(client, MNEMONIC)
-    for i in range(200):
-        swap_amount_in_route = SwapAmountInRoute(pool_id=497, token_out_denom="ibc/46B44899322F3CD854D2D46DEEF881958467CDD4B3B10086DA49296BBED94BED")
+    swap_amount_in_route_pairs = [
+        [SwapAmountInRoute(pool_id=3, token_out_denom="ibc/1480B8FD20AD5FCAE81EA87584D269547DD4D436843C1D20F15E00EB64743EF4"),
+        SwapAmountInRoute(pool_id=4, token_out_denom="ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2")],
+        [SwapAmountInRoute(pool_id=573, token_out_denom="ibc/4E5444C35610CC76FC94E7F7886B93121175C28262DDFDDE6F84E82BF2425452"),
+        SwapAmountInRoute(pool_id=574, token_out_denom="ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2")],
+        [SwapAmountInRoute(pool_id=497, token_out_denom="ibc/46B44899322F3CD854D2D46DEEF881958467CDD4B3B10086DA49296BBED94BED"),
+        SwapAmountInRoute(pool_id=498, token_out_denom="ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2")],
+        ]
+    token_in = Coin(denom=DENOM, amount=INITIAL_SWAP_AMOUNT)
+    msgs=[]
+    for route in swap_amount_in_route_pairs:
+        msg_swap_exact_amount_in = MsgSwapExactAmountIn(
+            sender=admin_address,
+            routes=route,
+            token_in=token_in,
+            token_out_min_amount="1")
+        msgs.append(msg_swap_exact_amount_in)
+    create_and_send_tx(msgs, admin_wallet, admin_account, client, "Swap", admin_account.sequence)   
+
+def many_balancer_swaps_in_one_block(client, pool_id: int, token_out_denom: str, num_swaps: int = 200):
+    admin_wallet, admin_address, admin_account = create_wallet(client, MNEMONIC)
+    for i in range(num_swaps):
+        swap_amount_in_route = SwapAmountInRoute(pool_id=pool_id, token_out_denom=token_out_denom)
         token_in = Coin(denom=DENOM, amount=INITIAL_SWAP_AMOUNT)
         msg_swap_exact_amount_in = MsgSwapExactAmountIn(
             sender=admin_address,
             routes=[swap_amount_in_route],
             token_in=token_in,
             token_out_min_amount="1")
-        create_and_send_tx([msg_swap_exact_amount_in], admin_wallet, admin_account, client, "Swap", admin_account.sequence + i)
+        create_and_send_tx([msg_swap_exact_amount_in], admin_wallet, admin_account, client, "Swap", admin_account.sequence + i + 1)
         
 def many_stableswap_swaps_in_block(client):
     admin_wallet, admin_address, admin_account = create_wallet(client, MNEMONIC)
@@ -81,20 +107,6 @@ def many_stableswap_swaps_in_block(client):
             token_in=token_in,
             token_out_min_amount="1")
         create_and_send_tx([msg_swap_exact_amount_in], admin_wallet, admin_account, client, "Swap", admin_account.sequence + i + 1)
-
-def multihop_swaps(client):
-    admin_wallet, admin_address, admin_account = create_wallet(client, MNEMONIC)
-    swap_amount_in_route_pairs = [
-        SwapAmountInRoute(pool_id=497, token_out_denom="ibc/46B44899322F3CD854D2D46DEEF881958467CDD4B3B10086DA49296BBED94BED"),
-        SwapAmountInRoute(pool_id=497, token_out_denom="uosmo")]
-    stress_route = swap_amount_in_route_pairs
-    token_in = Coin(denom=DENOM, amount=INITIAL_SWAP_AMOUNT)
-    msg_swap_exact_amount_in = MsgSwapExactAmountIn(
-        sender=admin_address,
-        routes=stress_route,
-        token_in=token_in,
-        token_out_min_amount="1")
-    create_and_send_tx([msg_swap_exact_amount_in], admin_wallet, admin_account, client, "Swap")   
     
     
 def swap(client):

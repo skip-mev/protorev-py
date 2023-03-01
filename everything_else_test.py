@@ -137,7 +137,7 @@ def get_messages_to_exec(admin_address: str, executor_address: str):
         developer_account=executor_address)
     msg_set_max_ppp_tx = MsgSetMaxPoolPointsPerTx(
         admin=admin_address,
-        max_pool_points_per_tx=50)
+        max_pool_points_per_tx=17)
     msg_set_max_ppp_block = MsgSetMaxPoolPointsPerBlock(
         admin=admin_address,
         max_pool_points_per_block=200)
