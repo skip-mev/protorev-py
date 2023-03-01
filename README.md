@@ -19,8 +19,10 @@
     4. Sets hot routes based on routes used by searchers across blocks 7400000-7900000
     5. Swaps a large amount on Pool 1, which ProtoRev should backrun succesfully if using mainnet state export
         - Assumes pool 1 is uosmo/ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2 pair
-- stress_test.py swaps 200 times in a block, ensuring protorev caps out based on its limits and doesn't add any extra block time.
-    - Note: The pool points set in the everything_else_test.py script are the highest they can be (there exists hard-coded limits in protorev that the admin account cannot override), and the pool weights set are the lowest they can be -- so this is the most ProtoRev can do at once.
+- stress_test.py 
+    1. swaps 200 times in a block, ensuring protorev caps out based on its limits and doesn't add any extra block time.
+    2. Ensures within tx limits work and are updated correctly
+    - Note: The block pool points set in the everything_else_test.py script are the highest they can be (there exists hard-coded limits in protorev that the admin account cannot override), and the pool weights set are the lowest they can be -- so this is the most ProtoRev can do at once.
 
 # Usage
 
